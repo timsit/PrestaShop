@@ -23,3 +23,26 @@
 *  International Registered Trademark & Property of PrestaShop SA
 */
 
+function updateAddresses()
+{
+	$.ajax({
+		type:"POST",
+		url: admin_cart_link,
+		async: true,
+		dataType: "json",
+		data : {
+			ajax: "1",
+			token: token_admin_cart,
+			tab: "AdminCarts",
+			action: "updateAddresses",
+			id_customer: id_customer,
+			id_cart: id_cart,
+			id_address_delivery: $('#id_address_delivery option:selected').val(),
+			id_address_invoice: $('#id_address_invoice option:selected').val()
+			},
+		success : function(res)
+		{
+			updateDeliveryOption();
+		}
+	});
+}

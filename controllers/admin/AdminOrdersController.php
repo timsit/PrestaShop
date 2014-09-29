@@ -320,9 +320,13 @@ class AdminOrdersControllerCore extends AdminController
 		$this->addJS(_PS_JS_DIR_.'vendor/d3.v3.min.js');
 		$this->addJS('https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=false');
 
-		if ($this->tabAccess['edit'] == 1 && $this->display == 'view')
+		$this->addJS(_PS_JS_DIR_.'admin_order.js');
+
+		if ($this->display == 'add')
+			$this->addJS(_PS_JS_DIR_.'admin_order-add.js');
+		else if ($this->tabAccess['edit'] == 1 && $this->display == 'view')
 		{
-			$this->addJS(_PS_JS_DIR_.'admin_order.js');
+			$this->addJS(_PS_JS_DIR_.'admin_order-edit.js');
 			$this->addJS(_PS_JS_DIR_.'tools.js');
 			$this->addJqueryPlugin('autocomplete');
 		}

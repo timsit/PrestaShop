@@ -23,13 +23,8 @@
 *  International Registered Trademark & Property of PrestaShop SA
 *}
 <script type="text/javascript">
-	var id_cart = {$cart->id|intval};
-	var id_customer = 0;
-	var admin_order_tab_link = "{$link->getAdminLink('AdminOrders')|addslashes}";
-	var changed_shipping_price = false;
-	var shipping_price_selected_carrier = '';
 	var current_index = '{$current|escape:'html':'UTF-8'}&token={$token|escape:'html':'UTF-8'}';
-	var admin_cart_link = '{$link->getAdminLink('AdminCarts')|addslashes}';
+	var token_admin_cart = '{getAdminToken tab='AdminCarts'}';
 	var cart_quantity = new Array();
 	var currencies = new Array();
 	var id_currency = '';
@@ -1043,29 +1038,6 @@
 		$('#edit_invoice_address').attr('href', invoice_address_edit_link);
 	}
 
-	function updateAddresses()
-	{
-		$.ajax({
-			type:"POST",
-			url: "{$link->getAdminLink('AdminCarts')|addslashes}",
-			async: true,
-			dataType: "json",
-			data : {
-				ajax: "1",
-				token: "{getAdminToken tab='AdminCarts'}",
-				tab: "AdminCarts",
-				action: "updateAddresses",
-				id_customer: id_customer,
-				id_cart: id_cart,
-				id_address_delivery: $('#id_address_delivery option:selected').val(),
-				id_address_invoice: $('#id_address_invoice option:selected').val()
-				},
-			success : function(res)
-			{
-				updateDeliveryOption();
-			}
-		});
-	}
 </script>
 
 <div class="leadin">{block name="leadin"}{/block}</div>
@@ -1554,3 +1526,10 @@
 <div id="loader_container">
 	<div id="loader"></div>
 </div>
+
+{addJsDef id_cart = $cart->id|intval}
+{addJsDef id_customer = 0}
+{addJsDef changed_shipping_price = false}
+{addJsDef shipping_price_selected_carrier = ''}
+{addJsDef admin_order_tab_link = $link->getAdminLink('AdminOrders')|addslashes}
+{addJsDef admin_cart_link = $link->getAdminLink('AdminCarts')|addslashes}
