@@ -23,6 +23,240 @@
 *  International Registered Trademark & Property of PrestaShop SA
 */
 
+$(document).ready(function() {
+
+	$('#customer').typeWatch({
+		captureLength: 1,
+		highlight: true,
+		wait: 100,
+		callback: function(){ searchCustomers(); }
+		});
+	$('#product').typeWatch({
+		captureLength: 1,
+		highlight: true,
+		wait: 750,
+		callback: function(){ searchProducts(); }
+	});
+	$('#payment_module_name').change(function() {
+		var id_order_state = defaults_order_state[this.value];
+		if (typeof(id_order_state) == 'undefined')
+			id_order_state = defaults_order_state['other'];
+		$('#id_order_state').val(id_order_state);
+	});
+	$("#id_address_delivery").change(function() {
+		updateAddresses();
+	});
+	$("#id_address_invoice").change(function() {
+		updateAddresses();
+	});
+	$('#id_currency').change(function() {
+		updateCurrency();
+	});
+	$('#id_lang').change(function(){
+		updateLang();
+	});
+	$('#delivery_option,#carrier_recycled_package,#order_gift,#gift_message').change(function() {
+		updateDeliveryOption();
+	});
+	$('#shipping_price').change(function() {
+		if ($(this).val() != shipping_price_selected_carrier)
+			changed_shipping_price = true;
+	});
+
+	$('#payment_module_name').change();
+	$.ajaxSetup({ type:"post" });
+	$("#voucher").autocomplete(admin_cart_rules_link, {
+				minChars: 3,
+				max: 15,
+				width: 250,
+				selectFirst: false,
+				scroll: false,
+				dataType: "json",
+				formatItem: function(data, i, max, value, term) {
+					return value;
+				},
+				parse: function(data) {
+					if (!data.found)
+						$('#vouchers_err').html(msg_no_voucher_found).show();
+					else
+						$('#vouchers_err').hide();
+					var mytab = new Array();
+					for (var i = 0; i < data.vouchers.length; i++)
+						mytab[mytab.length] = { data: data.vouchers[i], value: data.vouchers[i].name + (data.vouchers[i].code.length > 0 ? ' - ' + data.vouchers[i].code : '')};
+					return mytab;
+				},
+				extraParams: {
+					ajax: "1",
+					token: token_admin_cart_rules,
+					tab: "AdminCartRules",
+					action: "searchCartRuleVouchers"
+				}
+			}
+		)
+		.result(function(event, data, formatted) {
+			$('#voucher').val(data.name);
+			add_cart_rule(data.id_cart_rule);
+		});
+	if (id_cart > 0)
+	{
+		setupCustomer(id_customer);
+		useCart('id_cart');
+	}
+
+	$('.delete_product').live('click', function(e) {
+		e.preventDefault();
+		var to_delete = $(this).attr('rel').split('_');
+		deleteProduct(to_delete[1], to_delete[2], to_delete[3]);
+	});
+	$('.delete_discount').live('click', function(e) {
+		e.preventDefault();
+		deleteVoucher($(this).attr('rel'));
+	});
+	$('.use_cart').live('click', function(e) {
+		e.preventDefault();
+		useCart($(this).attr('rel'));
+		return false;
+	});
+
+	$('input:radio[name="free_shipping"]').on('change',function() {
+		var free_shipping = $('input[name=free_shipping]:checked').val();
+		$.ajax({
+			type:"POST",
+			url: admin_cart_link,
+			async: true,
+			dataType: "json",
+			data : {
+				ajax: "1",
+				token: token_admin_cart,
+				tab: "AdminCarts",
+				action: "updateFreeShipping",
+				id_cart: id_cart,
+				id_customer: id_customer,
+				'free_shipping': free_shipping
+				},
+			success : function(res)
+			{
+				displaySummary(res);
+			}
+		});
+	});
+
+	$('.duplicate_order').live('click', function(e) {
+		e.preventDefault();
+		duplicateOrder($(this).attr('rel'));
+	});
+	$('.cart_quantity').live('change', function(e) {
+		e.preventDefault();
+		if ($(this).val() != cart_quantity[$(this).attr('rel')])
+		{
+			var product = $(this).attr('rel').split('_');
+			updateQty(product[0], product[1], product[2], $(this).val() - cart_quantity[$(this).attr('rel')]);
+		}
+	});
+	$('.increaseqty_product, .decreaseqty_product').live('click', function(e) {
+		e.preventDefault();
+		var product = $(this).attr('rel').split('_');
+		var sign = '';
+		if ($(this).hasClass('decreaseqty_product'))
+			sign = '-';
+		updateQty(product[0], product[1],product[2], sign+1);
+	});
+	$('#id_product').live('keydown', function(e) {
+		$(this).click();
+		return true;
+	});
+	$('#id_product, .id_product_attribute').live('change', function(e) {
+		e.preventDefault();
+		displayQtyInStock(this.id);
+	});
+	$('#id_product, .id_product_attribute').live('keydown', function(e) {
+		$(this).change();
+		return true;
+	});
+	$('.product_unit_price').live('change', function(e) {
+		e.preventDefault();
+		var product = $(this).attr('rel').split('_');
+		updateProductPrice(product[0], product[1], $(this).val());
+	});
+	$('#order_message').live('change', function(e) {
+		e.preventDefault();
+		$.ajax({
+			type:"POST",
+			url: admin_cart_link,
+			async: true,
+			dataType: "json",
+			data : {
+				ajax: "1",
+				token: token_admin_cart,
+				tab: "AdminCarts",
+				action: "updateOrderMessage",
+				id_cart: id_cart,
+				id_customer: id_customer,
+				message: $(this).val()
+				},
+			success : function(res)
+			{
+				displaySummary(res);
+			}
+		});
+	});
+	resetBind();
+
+	$('#customer').focus();
+
+	$('#submitAddProduct').on('click',function(){
+		addProduct();
+	});
+
+	$('#product').bind('keypress', function(e) {
+		var code = (e.keyCode ? e.keyCode : e.which);
+		if(code == 13)
+		{
+			e.stopPropagation();
+			e.preventDefault();
+			if ($('#submitAddProduct').length)
+				addProduct();
+		}			
+	});
+
+	$('#send_email_to_customer').on('click',function(){
+		sendMailToCustomer();
+		return false;
+	});
+
+	$('#products_found').hide();
+	$('#carts').hide();
+
+	$('#customer_part').on('click','button.setup-customer',function(e){
+		e.preventDefault();
+		setupCustomer($(this).data('customer'));
+		$(this).removeClass('setup-customer').addClass('change-customer').html('<i class="icon-refresh"></i>&nbsp;'+change_txt).blur();
+		$(this).closest('.customerCard').addClass('selected-customer');
+		$('.selected-customer .panel-heading').prepend('<i class="icon-ok text-success"></i>');
+		$('.customerCard').not('.selected-customer').remove();
+		$('#search-customer-form-group').hide();
+		var query = 'ajax=1&token='+token+'&action=changePaymentMethod&id_customer='+$(this).data('customer');
+		$.ajax({
+			type: 'POST',
+			url: admin_order_tab_link,
+			headers: { "cache-control": "no-cache" },
+			cache: false,
+			dataType: 'json',
+			data : query,
+			success : function(data) {
+				if (data.result)
+					$('#payment_module_name').replaceWith(data.view)
+			}
+		});
+	});
+
+	$('#customer_part').on('click','button.change-customer',function(e){
+		e.preventDefault();
+		$('#search-customer-form-group').show();
+		$(this).blur();
+	});
+});
+
 function resetBind()
 {
 	$('.fancybox').fancybox({
@@ -248,7 +482,7 @@ function searchCustomers()
 				});
 			}
 			else
-				html = '<div class="alert alert-warning"><i class="icon-warning-sign"></i>&nbsp;{l s='No customers found'}</div>';
+				html = '<div class="alert alert-warning"><i class="icon-warning-sign"></i>&nbsp;'+msg_no_customers_found+'</div>';
 			$('#customers').html(html);
 			resetBind();
 		}
@@ -346,7 +580,7 @@ function searchProducts()
 	$('#products_part').show();
 	$.ajax({
 		type:"POST",
-		url: admin_orders_tab_link,
+		url: admin_order_tab_link,
 		async: true,
 		dataType: "json",
 		data : {
@@ -367,6 +601,7 @@ function searchProducts()
 
 			if(res.found)
 			{
+console.log(res);
 				if (!customization_errors)
 					$('#products_err').addClass('hide');
 				else
@@ -719,7 +954,7 @@ function sendMailToCustomer()
 {
 	$.ajax({
 		type:"POST",
-		url: admin_orders_tab_link,
+		url: admin_order_tab_link,
 		async: true,
 		dataType: "json",
 		data : {
