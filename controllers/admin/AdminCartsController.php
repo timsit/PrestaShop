@@ -352,6 +352,7 @@ class AdminCartsControllerCore extends AdminController
 	
 	public function ajaxProcessUpdateCustomizationFields()
 	{
+die(json_encode(array("test")));
 		$errors = array();
 		if ($this->tabAccess['edit'] === '1')
 		{
@@ -371,7 +372,7 @@ class AdminCartsControllerCore extends AdminController
 						if (!Tools::getValue($field_id))
 						{
 							if ($customization_field['required'])
-								$errors[] = Tools::displayError('Please fill in all the required fields.');
+								$errors[] = Tools::displayError('Please fill in all the required fields.1');
 							continue;
 						}
 						if (!Validate::isMessage(Tools::getValue($field_id)))
@@ -383,7 +384,7 @@ class AdminCartsControllerCore extends AdminController
 						if (!isset($_FILES[$field_id]) || !isset($_FILES[$field_id]['tmp_name']) || empty($_FILES[$field_id]['tmp_name']))
 						{
 							if ($customization_field['required'])
-								$errors[] = Tools::displayError('Please fill in all the required fields.');
+								$errors[] = Tools::displayError('Please fill in all the required fields.2');
 							continue;
 						}
 						if ($error = ImageManager::validateUpload($_FILES[$field_id], (int)Configuration::get('PS_PRODUCT_PICTURE_MAX_SIZE')))

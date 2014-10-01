@@ -26,12 +26,9 @@
 	var current_index = '{$current|escape:'html':'UTF-8'}&token={$token|escape:'html':'UTF-8'}';
 	var token_admin_cart = '{getAdminToken tab='AdminCarts'}';
 	var token_admin_cart_rules = '{getAdminToken tab='AdminCartRules'}';
+
 	var cart_quantity = new Array();
 	var currencies = new Array();
-	var id_currency = '';
-	var id_lang = '';
-	//var txt_show_carts = '{l s='Show carts and orders for this customer.' js=1}';
-	//var txt_hide_carts = '{l s='Hide carts and orders for this customer.' js=1}';
 	var defaults_order_state = new Array();
 
 	{foreach from=$defaults_order_state key='module' item='id_order_state'}
@@ -161,19 +158,8 @@
 			<!-- @TODO: please be kind refacto -->
 			<div class="form-group">
 				<div class="col-lg-9 col-lg-offset-3">
-					<iframe id="customization_list" seamless>
-						<html>
-						<head>
-							{if isset($css_files_orders)}
-								{foreach from=$css_files_orders key=css_uri item=media}
-									<link href="{$css_uri}" rel="stylesheet" type="text/css" media="{$media}" />
-								{/foreach}
-							{/if}
-						</head>
-						<body>
-						</body>
-						</html>
-					</iframe>
+					<div id="customization_list">
+					</div>
 				</div>
 			</div>
 			<div class="form-group">
@@ -532,6 +518,7 @@
 {addJsDef id_currency = ''}
 {addJsDef id_lang = ''}
 {addJsDef customization_errors = false}
+{addJsDef has_customizations = '0'}
 {addJsDef pic_dir = $pic_dir}
 {addJsDef currency_format = 5}
 {addJsDef currency_sign = ''}
