@@ -24,13 +24,12 @@
 *}
 
 {* Assign product price *}
-{if ($order->getTaxCalculationMethod() == $smarty.const.PS_TAX_EXC)}
+{if ($taxCalculationMethod == $smarty.const.PS_TAX_EXC)}
 	{assign var=product_price value=($product['unit_price_tax_excl'] + $product['ecotax'])}
 {else}
 	{assign var=product_price value=$product['unit_price_tax_incl']}
 {/if}
 
-{if ($product['product_quantity'] > $product['customizationQuantityTotal'])}
 <tr class="product-line-row">
 	<td>{if isset($product.image) && $product.image->id}{$product.image_tag}{/if}</td>
 	<td>
@@ -73,8 +72,8 @@
 		</span>
 		{/if}
 	</td>
-	{if $display_warehouse}<td>{$product.warehouse_name|escape:'html':'UTF-8'}</td>{/if}
-	{if ($order->hasBeenPaid())}
+	{if isset($display_warehouse) && $display_warehouse}<td>{$product.warehouse_name|escape:'html':'UTF-8'}</td>{/if}
+	{if (isset($order) && $order->hasBeenPaid())}
 		<td class="productQuantity text-center">
 			{$product['product_quantity_refunded']}
 			{if count($product['refund_history'])}
@@ -90,7 +89,7 @@
 			{/if}
 		</td>
 	{/if}
-	{if $order->hasBeenDelivered() || $order->hasProductReturned()}
+	{if isset($order) && ($order->hasBeenDelivered() || $order->hasProductReturned())}
 		<td class="productQuantity text-center">
 			{$product['product_quantity_return']}
 			{if count($product['return_history'])}
@@ -110,38 +109,42 @@
 	<td class="total_product">
 		{displayPrice price=(Tools::ps_round($product_price, 2) * ($product['product_quantity'] - $product['customizationQuantityTotal'])) currency=$currency->id}
 	</td>
-	<td colspan="2" style="display: none;" class="add_product_fields">&nbsp;</td>
-	<td class="cancelCheck standard_refund_fields current-edit" style="display:none">
-		<input type="hidden" name="totalQtyReturn" id="totalQtyReturn" value="{$product['product_quantity_return']}" />
-		<input type="hidden" name="totalQty" id="totalQty" value="{$product['product_quantity']}" />
-		<input type="hidden" name="productName" id="productName" value="{$product['product_name']}" />
-	{if ((!$order->hasBeenDelivered() OR Configuration::get('PS_ORDER_RETURN')) AND (int)($product['product_quantity_return']) < (int)($product['product_quantity']))}
-		<input type="checkbox" name="id_order_detail[{$product['id_order_detail']}]" id="id_order_detail[{$product['id_order_detail']}]" value="{$product['id_order_detail']}" onchange="setCancelQuantity(this, {$product['id_order_detail']}, {$product['product_quantity'] - $product['customizationQuantityTotal'] - $product['product_quantity_return']})" {if ($product['product_quantity_return'] + $product['product_quantity_refunded'] >= $product['product_quantity'])}disabled="disabled" {/if}/>
-	{else}
-		--
-	{/if}
-	</td>
-	<td class="cancelQuantity standard_refund_fields current-edit" style="display:none">
-	{if ($product['product_quantity_return'] + $product['product_quantity_refunded'] >= $product['product_quantity'])}
-		<input type="hidden" name="cancelQuantity[{$product['id_order_detail']}]" value="0" />
-	{elseif (!$order->hasBeenDelivered() OR Configuration::get('PS_ORDER_RETURN'))}
-		<input type="text" id="cancelQuantity_{$product['id_order_detail']}" name="cancelQuantity[{$product['id_order_detail']}]" onclick="selectCheckbox(this);" value="" />
-	{/if}
+	{if isset($order)}
+		<td colspan="2" style="display: none;" class="add_product_fields">&nbsp;</td>
 
-	{if $product['customizationQuantityTotal']}
-		{assign var=productQuantity value=($product['product_quantity']-$product['customizationQuantityTotal'])}
-	{else}
-		{assign var=productQuantity value=$product['product_quantity']}
-	{/if}
+		<td class="cancelCheck standard_refund_fields current-edit" style="display:none">
+			<input type="hidden" name="totalQtyReturn" id="totalQtyReturn" value="{$product['product_quantity_return']}" />
+			<input type="hidden" name="totalQty" id="totalQty" value="{$product['product_quantity']}" />
+			<input type="hidden" name="productName" id="productName" value="{$product['product_name']}" />
+		{if isset($order) && ((!$order->hasBeenDelivered() OR Configuration::get('PS_ORDER_RETURN')) AND (int)($product['product_quantity_return']) < (int)($product['product_quantity']))}
+			<input type="checkbox" name="id_order_detail[{$product['id_order_detail']}]" id="id_order_detail[{$product['id_order_detail']}]" value="{$product['id_order_detail']}" onchange="setCancelQuantity(this, {$product['id_order_detail']}, {$product['product_quantity'] - $product['customizationQuantityTotal'] - $product['product_quantity_return']})" {if ($product['product_quantity_return'] + $product['product_quantity_refunded'] >= $product['product_quantity'])}disabled="disabled" {/if}/>
+		{else}
+			--
+		{/if}
+		</td>
 
-	{if ($order->hasBeenDelivered())}
-		{$product['product_quantity_refunded']}/{$productQuantity-$product['product_quantity_refunded']}
-	{elseif ($order->hasBeenPaid())}
-		{$product['product_quantity_return']}/{$productQuantity}
-	{else}
-		0/{$productQuantity}
+		<td class="cancelQuantity standard_refund_fields current-edit" style="display:none">
+		{if ($product['product_quantity_return'] + $product['product_quantity_refunded'] >= $product['product_quantity'])}
+			<input type="hidden" name="cancelQuantity[{$product['id_order_detail']}]" value="0" />
+		{elseif (!$order->hasBeenDelivered() OR Configuration::get('PS_ORDER_RETURN'))}
+			<input type="text" id="cancelQuantity_{$product['id_order_detail']}" name="cancelQuantity[{$product['id_order_detail']}]" onclick="selectCheckbox(this);" value="" />
+		{/if}
+
+		{if $product['customizationQuantityTotal']}
+			{assign var=productQuantity value=($product['product_quantity']-$product['customizationQuantityTotal'])}
+		{else}
+			{assign var=productQuantity value=$product['product_quantity']}
+		{/if}
+
+		{if ($order->hasBeenDelivered())}
+			{$product['product_quantity_refunded']}/{$productQuantity-$product['product_quantity_refunded']}
+		{elseif ($order->hasBeenPaid())}
+			{$product['product_quantity_return']}/{$productQuantity}
+		{else}
+			0/{$productQuantity}
+		{/if}
+		</td>
 	{/if}
-	</td>
 	<td class="partial_refund_fields current-edit" style="display:none; width: 250px;">
 		<div class="form-group">
 			<div class="col-lg-4">
@@ -175,7 +178,7 @@
 		</div>
 	
 	</td>
-	{if ($can_edit && !$order->hasBeenDelivered())}
+	{if (isset($order) && $can_edit && !$order->hasBeenDelivered())}
 	<td class="product_invoice" style="display: none;">
 		{if sizeof($invoices_collection)}
 		<select name="product_invoice" class="edit_product_invoice">
@@ -220,4 +223,3 @@
 	</td>
 	{/if}
 </tr>
-{/if}

@@ -721,11 +721,11 @@ function updateCartProducts(products, gifts, id_address_delivery)
 						id_customization = this.id_customization;
 					});
 				}
-		cart_content += '<tr><td></td><td colspan="3">'+customized_desc+'</td><td>';
-		cart_content += '<div class="input-group fixed-width-md"><div class="input-group-btn"><a href="#" class="btn btn-default decreaseqty_product" rel="'+id_product+'_'+id_product_attribute+'_'+id_customization+'"><i class="icon-caret-down"></i></a><a href="#" class="btn btn-default increaseqty_product" rel="'+id_product+'_'+id_product_attribute+'_'+id_customization+'" ><i class="icon-caret-up"></i></a></div>';
-		cart_content += '<input type="text" rel="'+id_product+'_'+id_product_attribute+'_'+id_customization +'" class="cart_quantity" value="'+this.quantity+'" />';
-		cart_content += '<div class="input-group-btn"><a href="#" class="delete_product btn btn-default" rel="delete_'+id_product+'_'+id_product_attribute+'_'+id_customization+'" ><i class="icon-remove"></i></a></div>';
-		cart_content += '</div></td><td></td></tr>';
+				cart_content += '<tr><td></td><td colspan="3">'+customized_desc+'</td><td>';
+				cart_content += '<div class="input-group fixed-width-md"><div class="input-group-btn"><a href="#" class="btn btn-default decreaseqty_product" rel="'+id_product+'_'+id_product_attribute+'_'+id_customization+'"><i class="icon-caret-down"></i></a><a href="#" class="btn btn-default increaseqty_product" rel="'+id_product+'_'+id_product_attribute+'_'+id_customization+'" ><i class="icon-caret-up"></i></a></div>';
+				cart_content += '<input type="text" rel="'+id_product+'_'+id_product_attribute+'_'+id_customization +'" class="cart_quantity" value="'+this.quantity+'" />';
+				cart_content += '<div class="input-group-btn"><a href="#" class="delete_product btn btn-default" rel="delete_'+id_product+'_'+id_product_attribute+'_'+id_customization+'" ><i class="icon-remove"></i></a></div>';
+				cart_content += '</div></td><td></td></tr>';
 			});
 		}
 	});
@@ -842,6 +842,7 @@ function updateQty(id_product, id_product_attribute, id_customization, qty)
 		success : function(res)
 		{
 			displaySummary(res);
+			updateViews(res.views);
 			var errors = '';
 			if (res.errors.length)
 			{
@@ -855,6 +856,11 @@ function updateQty(id_product, id_product_attribute, id_customization, qty)
 			$('#products_err').html(errors);
 		}
 	});
+}
+
+function updateViews(views)
+{
+	$('#customer_cart tbody').append(views.product_tbody);
 }
 
 function resetShippingPrice()

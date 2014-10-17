@@ -1608,6 +1608,7 @@ class AdminOrdersControllerCore extends AdminController
 		// Smarty assign
 		$this->tpl_view_vars = array(
 			'order' => $order,
+			'taxCalculationMethod' => $order->getTaxCalculationMethod(),
 			'cart' => new Cart($order->id_cart),
 			'customer' => $customer,
 			'gender' => $gender,
@@ -2042,6 +2043,7 @@ class AdminOrdersControllerCore extends AdminController
 		$this->context->smarty->assign(array(
 			'product' => $product,
 			'order' => $order,
+			'taxCalculationMethod' => $order->getTaxCalculationMethod(),
 			'currency' => new Currency($order->id_currency),
 			'can_edit' => $this->tabAccess['edit'],
 			'invoices_collection' => $invoice_collection,

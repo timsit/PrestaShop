@@ -463,7 +463,18 @@ die(json_encode(array("test")));
 				}
 			}
 
-			echo Tools::jsonEncode(array_merge($this->ajaxReturnVars(), array('errors' => $errors)));
+			$ajaxVars = $this->ajaxReturnVars();
+			$views = array();
+
+			$product_tbody = $this->createTemplate('controllers/orders/_product_tbody.tpl');
+			$product_tbody->assign(array(
+					'currency' => $ajaxVars['currency'],
+					'products' => $ajaxVars['summary']['products'],
+					'taxCalculationMethod' => 0,
+				));
+			$views['product_tbody'] = $product_tbody->fetch();
+
+			echo Tools::jsonEncode(array_merge($ajaxVars, array('errors' => $errors, 'views' => $views)));
 		}
 	}
 

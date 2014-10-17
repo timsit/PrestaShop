@@ -925,10 +925,11 @@
 							</thead>
 							<tbody>
 							{foreach from=$products item=product key=k}
-								{* Include customized datas partial *}
-								{include file='controllers/orders/_customized_data.tpl'}
+							{d var=$product}
 								{* Include product line partial *}
 								{include file='controllers/orders/_product_line.tpl'}
+								{* Include customized datas partial *}
+								{include file='controllers/orders/_customized_data.tpl'}
 							{/foreach}
 							{if $can_edit}
 								{include file='controllers/orders/_new_product.tpl'}

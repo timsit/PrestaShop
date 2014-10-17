@@ -22,9 +22,9 @@
 *  @license    http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
 *  International Registered Trademark & Property of PrestaShop SA
 *}
-{if $product['customizedDatas']}
+{if $product['customizedDatas'] || $product['customized_data']}
 {* Assign product price *}
-{if ($order->getTaxCalculationMethod() == $smarty.const.PS_TAX_EXC)}
+{if ($taxCalculationMethod == $smarty.const.PS_TAX_EXC)}
 	{assign var=product_price value=($product['unit_price_tax_excl'] + $product['ecotax'])}
 {else}
 	{assign var=product_price value=$product['unit_price_tax_incl']}
