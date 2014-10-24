@@ -427,7 +427,7 @@ function updateAddressSelection()
 
 				// Update global var deliveryAddress
 				deliveryAddress = idAddress_delivery;
-				if (window.ajaxCart !== undefined)
+				if (window.blockCart !== undefined)
 				{
 					$('.cart_block_list dd, .cart_block_list dt').each(function(){
 						if (typeof($(this).attr('id')) != 'undefined')

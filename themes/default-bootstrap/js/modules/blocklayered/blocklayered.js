@@ -568,8 +568,8 @@ function reloadContent(params_plus)
 				// Reload products and pagination
 				reloadContent();
 			});
-			if (typeof(ajaxCart) != "undefined")
-				ajaxCart.overrideButtonsInThePage();
+			if (typeof(blockCart) != "undefined")
+				blockCart.overrideButtonsInThePage();
 
 			if (typeof(reloadProductComparison) == 'function')
 				reloadProductComparison();

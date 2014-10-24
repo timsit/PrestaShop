@@ -131,7 +131,7 @@ function WishlistChangeDefault(id, id_wishlist)
 function WishlistBuyProduct(token, id_product, id_product_attribute, id_quantity, button, ajax)
 {
 	if(ajax)
-		ajaxCart.add(id_product, id_product_attribute, false, button, 1, [token, id_quantity]);
+		blockCart.add(id_product, id_product_attribute, false, button, 1, [token, id_quantity]);
 	else
 	{
 		$('#' + id_quantity).val(0);
