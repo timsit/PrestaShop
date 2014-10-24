@@ -55,10 +55,10 @@
 						</div>
 					</div>
 					<br/>
-					<div class="fixed-width-xl">				
+					<div class="fixed-width-xl">
 						<div class="input-group">
 							{if $currency->format % 2}<div class="input-group-addon">{$currency->sign} {l s='tax incl.'}</div>{/if}
-							<input type="text" name="product_price_tax_incl" class="edit_product_price_tax_incl edit_product_price" value="{Tools::ps_round($product['unit_price_tax_incl'], 2)}" size="5" /> 
+							<input type="text" name="product_price_tax_incl" class="edit_product_price_tax_incl edit_product_price" value="{Tools::ps_round($product['unit_price_tax_incl'], 2)}" size="5" />
 							{if !$currency->format % 2}<div class="input-group-addon">{$currency->sign} {l s='tax incl.'}</div>{/if}
 						</div>
 					</div>
@@ -66,11 +66,11 @@
 			</div>
 			{/if}
 		</td>
-		<td class="productQuantity">{$product['customizationQuantityTotal']}</td>
+		<td class="productQuantity text-center">{$product['customizationQuantityTotal']}</td>
 		{if $display_warehouse}<td>&nbsp;</td>{/if}
-		{if ($order->hasBeenPaid())}<td class="productQuantity">{$product['customizationQuantityRefunded']}</td>{/if}
-		{if ($order->hasBeenDelivered() || $order->hasProductReturned())}<td class="productQuantity">{$product['customizationQuantityReturned']}</td>{/if}
-		{if $stock_management}<td class="">{$product['current_stock']}</td>{/if}
+		{if ($order->hasBeenPaid())}<td class="productQuantity text-center">{$product['customizationQuantityRefunded']}</td>{/if}
+		{if ($order->hasBeenDelivered() || $order->hasProductReturned())}<td class="productQuantity text-center">{$product['customizationQuantityReturned']}</td>{/if}
+		{if $stock_management}<td class="text-center">{$product['current_stock']}</td>{/if}
 		<td class="total_product">
 		{if ($order->getTaxCalculationMethod() == $smarty.const.PS_TAX_EXC)}
 			{displayPrice price=Tools::ps_round($product['product_price'] * $product['customizationQuantityTotal'], 2) currency=$currency->id|intval}
@@ -127,8 +127,8 @@
 									<div class="form-group">
 										<span class="col-lg-4 control-label"><strong>{if $data['name']}{$data['name']}{else}{l s='Picture #'}{$data@iteration}{/if}</strong></span>
 										<div class="col-lg-8">
-											<a href="displayImage.php?img={$data['value']}&amp;name={$order->id|intval}-file{$data@iteration}" target="_blank">
-												<img class="img-thumbnail" src="{$smarty.const._THEME_PROD_PIC_DIR_}{$data['value']}_small" alt="" />
+											<a href="displayImage.php?img={$data['value']}&amp;name={$order->id|intval}-file{$data@iteration}" class="_blank">
+												<img class="img-thumbnail" src="{$smarty.const._THEME_PROD_PIC_DIR_}{$data['value']}_small" alt=""/>
 											</a>
 										</div>
 									</div>
@@ -147,7 +147,7 @@
 					</div>
 				</td>
 				<td>-</td>
-				<td class="productQuantity">
+				<td class="productQuantity text-center">
 					<span class="product_quantity_show{if (int)$customization['quantity'] > 1} red bold{/if}">{$customization['quantity']}</span>
 					{if $can_edit}
 					<span class="product_quantity_edit" style="display:none;">
@@ -156,16 +156,16 @@
 					{/if}
 				</td>
 				{if $display_warehouse}<td>&nbsp;</td>{/if}
-				{if ($order->hasBeenPaid())}<td>{$customization['quantity_refunded']}</td>{/if}
-				{if ($order->hasBeenDelivered())}<td>{$customization['quantity_returned']}</td>{/if}
-				<td>-</td>
+				{if ($order->hasBeenPaid())}<td class="text-center">{$customization['quantity_refunded']}</td>{/if}
+				{if ($order->hasBeenDelivered())}<td class="text-center">{$customization['quantity_returned']}</td>{/if}
+				<td class="text-center">-</td>
 				<td class="total_product">
 					{if ($order->getTaxCalculationMethod() == $smarty.const.PS_TAX_EXC)}
 						{displayPrice price=Tools::ps_round($product['product_price'] * $customization['quantity'], 2) currency=$currency->id|intval}
 					{else}
 						{displayPrice price=Tools::ps_round($product['product_price_wt'] * $customization['quantity'], 2) currency=$currency->id|intval}
 					{/if}
-				</td>				
+				</td>
 				<td class="cancelCheck standard_refund_fields current-edit" style="display:none">
 					<input type="hidden" name="totalQtyReturn" id="totalQtyReturn" value="{$customization['quantity_returned']|intval}" />
 					<input type="hidden" name="totalQty" id="totalQty" value="{$customization['quantity']|intval}" />
@@ -212,7 +212,7 @@
 							({l s='%s refund' sprintf=$product['amount_refund']})
 						{/if}
 						<input type="hidden" value="{$product['quantity_refundable']}" class="partialRefundProductQuantity" />
-						<input type="hidden" value="{$product['amount_refundable']}" class="partialRefundProductAmount" />		
+						<input type="hidden" value="{$product['amount_refundable']}" class="partialRefundProductAmount" />
 					</div>
 				</td>
 				{if ($can_edit && !$order->hasBeenDelivered())}

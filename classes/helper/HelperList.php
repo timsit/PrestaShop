@@ -39,10 +39,10 @@ class HelperListCore extends Helper
 	protected $_filter;
 
 	/** @var array Number of results in list per page (used in select field) */
-	protected $_pagination = array(20, 50, 100, 300, 1000);
+	public $_pagination = array(20, 50, 100, 300, 1000);
 	
 	/** @var integer Default number of results in list per page */
-	protected $_default_pagination = 50;
+	public $_default_pagination = 50;
 
 	/** @var string ORDER BY clause determined by field/arrows in list header */
 	public $orderBy;
@@ -631,6 +631,7 @@ class HelperListCore extends Helper
 			'selected_pagination' => $selected_pagination,
 			'pagination' => $this->_pagination,
 			'list_total' => $this->listTotal,
+			'sql' => isset($this->sql) && $this->sql ? str_replace("\n", " ", str_replace("\r", "", $this->sql)) : false,
 			'token' => $this->token,
 			'table' => $this->table,
 			'bulk_actions' => $this->bulk_actions,

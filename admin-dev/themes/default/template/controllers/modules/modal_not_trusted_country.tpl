@@ -40,11 +40,11 @@
 	</p>
 	<p>
 		{l s='If you are unsure about this module, you can look for similar modules on the official marketplace.'}
-		<a target="_blank" href="http://addons.prestashop.com/">{l s='Click here to browse PrestaShop Addons.'}</a>
+		<a class="_blank" href="http://addons.prestashop.com/">{l s='Click here to browse PrestaShop Addons.'}</a>
 	</p>
 </div>
 
 <div class="modal-footer">
-	<button type="button" class="btn btn-default" data-dismiss="modal">{l s='Back to the module list'}</button>
+	<button type="button" class="btn btn-default" data-dismiss="modal">{l s='Back to modules list'}</button>
 	<a id="proceed-install-anyway" href="#" class="btn btn-warning">{l s='Proceed with the installation'}</a>
 </div>

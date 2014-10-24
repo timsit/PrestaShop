@@ -45,7 +45,7 @@
 			</ul>
 		</div>
 	</div>
-	<div id="modules_list_container_content" class="tab-content">
+	<div id="modules_list_container_content" class="tab-content modal-content-overflow">
 		{if count($tab_modules_list.not_installed)}
 		<div class="tab-pane active" id="tab_modules_list_not_installed">
 			<table id="tab_modules_list_not_installed" class="table">
@@ -67,5 +67,5 @@
 	</div>
 {/if}
 <div class="alert alert-addons row-margin-top">
-	<a href="http://addons.prestashop.com/?utm_source=backoffice_dispatch" target="_blank">{l s='More modules on addons.prestashop.com'}</a>
+	<a href="http://addons.prestashop.com/?utm_source=back-office&amp;utm_medium=dispatch&amp;utm_campaign=back-office-{$lang_iso|upper}&amp;utm_content={if $host_mode}ondemand{else}download{/if}" class="_blank">{l s='More modules on addons.prestashop.com'}</a>
 </div>

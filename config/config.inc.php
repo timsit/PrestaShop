@@ -34,6 +34,7 @@ define('_PS_SSL_PORT_', 443);
 ini_set('upload_max_filesize', '100M');
 ini_set('default_charset', 'utf-8');
 ini_set('magic_quotes_runtime', 0);
+ini_set('magic_quotes_sybase', 0);
 
 /* correct Apache charset (except if it's too late */
 if (!headers_sent())
@@ -42,7 +43,6 @@ if (!headers_sent())
 /* No settings file? goto installer... */
 if (!file_exists(_PS_ROOT_DIR_.'/config/settings.inc.php'))
 {
-	$dir = ((substr($_SERVER['REQUEST_URI'], -1) == '/' || is_dir($_SERVER['REQUEST_URI'])) ? $_SERVER['REQUEST_URI'] : dirname($_SERVER['REQUEST_URI']).'/');
 	if (file_exists(dirname(__FILE__).'/../install'))
 		header('Location: install/');
 	elseif (file_exists(dirname(__FILE__).'/../install-dev'))
@@ -51,7 +51,7 @@ if (!file_exists(_PS_ROOT_DIR_.'/config/settings.inc.php'))
 		die('Error: "install" directory is missing');
 	exit;
 }
-//include settings file only if we are not in multi-tenancy mode 
+//include settings file only if we are not in multi-tenancy mode
 require_once(_PS_ROOT_DIR_.'/config/settings.inc.php');
 require_once(_PS_CONFIG_DIR_.'autoload.php');
 
@@ -88,11 +88,11 @@ if (!isset($_SERVER['REQUEST_URI']) || empty($_SERVER['REQUEST_URI']))
 /* Trying to redefine HTTP_HOST if empty (on some webservers...) */
 if (!isset($_SERVER['HTTP_HOST']) || empty($_SERVER['HTTP_HOST']))
 	$_SERVER['HTTP_HOST'] = @getenv('HTTP_HOST');
-	
+
 $context = Context::getContext();
 
 /* Initialize the current Shop */
-try 
+try
 {
 	$context->shop = Shop::initialize();
 	$context->theme = new Theme((int)$context->shop->id_theme);
@@ -145,15 +145,16 @@ if (defined('_PS_ADMIN_DIR_'))
 	$cookie = new Cookie('psAdmin', '', $cookie_lifetime);
 else
 {
+	$force_ssl = Configuration::get('PS_SSL_ENABLED') && Configuration::get('PS_SSL_ENABLED_EVERYWHERE');
 	if ($context->shop->getGroup()->share_order)
-		$cookie = new Cookie('ps-sg'.$context->shop->getGroup()->id, '', $cookie_lifetime, $context->shop->getUrlsSharedCart());
+		$cookie = new Cookie('ps-sg'.$context->shop->getGroup()->id, '', $cookie_lifetime, $context->shop->getUrlsSharedCart(), false, $force_ssl);
 	else
 	{
 		$domains = null;
 		if ($context->shop->domain != $context->shop->domain_ssl)
 		  $domains = array($context->shop->domain_ssl, $context->shop->domain);
-		
-		$cookie = new Cookie('ps-s'.$context->shop->id, '', $cookie_lifetime, $domains);
+
+		$cookie = new Cookie('ps-s'.$context->shop->id, '', $cookie_lifetime, $domains, false, $force_ssl);
 	}
 }
 
@@ -200,7 +201,7 @@ if (!defined('_PS_ADMIN_DIR_'))
 	if (!isset($customer) || !Validate::isLoadedObject($customer))
 	{
 		$customer = new Customer();
-		
+
 		// Change the default group
 		if (Group::isFeatureActive())
 			$customer->id_default_group = (int)Configuration::get('PS_UNIDENTIFIED_GROUP');
@@ -226,9 +227,18 @@ define('_PS_OS_CANCELED_',    Configuration::get('PS_OS_CANCELED'));
 define('_PS_OS_REFUND_',      Configuration::get('PS_OS_REFUND'));
 define('_PS_OS_ERROR_',       Configuration::get('PS_OS_ERROR'));
 define('_PS_OS_OUTOFSTOCK_',  Configuration::get('PS_OS_OUTOFSTOCK'));
+define('_PS_OS_OUTOFSTOCK_PAID_',  Configuration::get('PS_OS_OUTOFSTOCK_PAID'));
+define('_PS_OS_OUTOFSTOCK_UNPAID_',  Configuration::get('PS_OS_OUTOFSTOCK_UNPAID'));
 define('_PS_OS_BANKWIRE_',    Configuration::get('PS_OS_BANKWIRE'));
 define('_PS_OS_PAYPAL_',      Configuration::get('PS_OS_PAYPAL'));
 define('_PS_OS_WS_PAYMENT_', Configuration::get('PS_OS_WS_PAYMENT'));
+
+if (!defined('_MEDIA_SERVER_1_'))
+	define('_MEDIA_SERVER_1_', Configuration::get('PS_MEDIA_SERVER_1_'));
+if (!defined('_MEDIA_SERVER_2_'))
+	define('_MEDIA_SERVER_2_', Configuration::get('PS_MEDIA_SERVER_2_'));
+if (!defined('_MEDIA_SERVER_3_'))
+	define('_MEDIA_SERVER_3_', Configuration::get('PS_MEDIA_SERVER_3_'));
 
 /* Get smarty */
 require_once(dirname(__FILE__).'/smarty.config.inc.php');

@@ -127,7 +127,10 @@ var blockCart = {
 		//for every 'add' buttons...
 		$(document).on('click', '.ajax_add_to_cart_button', function(e){
 			e.preventDefault();
-			var idProduct =  $(this).data('id-product');
+			var idProduct =  parseInt($(this).data('id-product'));
+			var minimalQuantity =  parseInt($(this).data('minimal_quantity'));
+			if (!minimalQuantity)
+				minimalQuantity = 1;
 			if ($(this).prop('disabled') != 'disabled')
 				blockCart.add(idProduct, null, false, this);
 		});
@@ -188,6 +191,7 @@ var blockCart = {
 			$('.cart_block_list.collapsed').slideDown({
 				duration: 450,
 				complete: function(){
+					$(this).parent().show(); // parent is hidden in global.js::accordion()
 					$(this).addClass('expanded').removeClass('collapsed');
 				}
 			});
@@ -306,6 +310,7 @@ var blockCart = {
 		if ($('.cart_block_list').hasClass('collapsed'))
 			this.expand();
 		//send the ajax request to the server
+
 		$.ajax({
 			type: 'POST',
 			headers: { "cache-control": "no-cache" },

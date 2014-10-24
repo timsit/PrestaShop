@@ -145,7 +145,7 @@ function editProductRefreshTotal(element)
 {
 	element = element.parent().parent().parent();
 	var element_list = [];
-	
+
 	// Customized product
 	if(element.hasClass('customized'))
 	{
@@ -163,7 +163,7 @@ function editProductRefreshTotal(element)
 
 	if (price < 0 || isNaN(price))
 		price = 0;
-	
+
 	// Customized product
 	if (element_list.length)
 	{
@@ -176,7 +176,7 @@ function editProductRefreshTotal(element)
 				$(elm).find('.total_product').html(formatCurrency(subtotal, currency_format, currency_sign, currency_blank));
 			}
 		});
-		
+
 		var total = makeTotalProductCaculation(qty, price);
 		element.find('td.total_product').html(formatCurrency(total, currency_format, currency_sign, currency_blank));
 		element.find('td.productQuantity').html(qty);
@@ -215,7 +215,7 @@ function refreshProductLineView(element, view)
 {
 	var new_product_line = $(view);
 	new_product_line.find('td').hide();
-	
+
 	var element_list = [];
 	if (element.parent().parent().find('.edit_product_id_order_detail').length)
 		var element_list = $('.customized-' + element.parent().parent().find('.edit_product_id_order_detail').val());
@@ -317,7 +317,7 @@ function init()
 		$('#message').hide();
 		e.preventDefault();
 	});
-	
+
 	$('#add_product').unbind('click').click(function(e) {
 		$('.cancel_product_change_link:visible').trigger('click');
 		$('.add_product_fields').show();
@@ -525,7 +525,7 @@ function init()
 	});
 
 	$('.edit_shipping_number_link').unbind('click').click(function(e) {
-		$(this).parent().find('.shipping_number_show').hide();
+		$(this).parent().parent().find('.shipping_number_show').hide();
 		$(this).parent().find('.shipping_number_edit').show();
 
 		$(this).parent().find('.edit_shipping_number_link').hide();
@@ -534,7 +534,7 @@ function init()
 	});
 
 	$('.cancel_shipping_number_link').unbind('click').click(function(e) {
-		$(this).parent().find('.shipping_number_show').show();
+		$(this).parent().parent().find('.shipping_number_show').show();
 		$(this).parent().find('.shipping_number_edit').hide();
 
 		$(this).parent().find('.edit_shipping_number_link').show();
@@ -597,14 +597,21 @@ function init()
 				if (data.result)
 				{
 					current_product = data;
-					
+
 					var element_list = $('.customized-' + element.parent().parent().find('.edit_product_id_order_detail').val());
 					if (!element_list.length)
+					{
 						element_list = element.parent().parent().parent();
+						element_list.parent().parent().find('td .product_quantity_show').hide();
+						element_list.parent().parent().find('td .product_quantity_edit').show();
+					}
+					else
+					{
+						element_list.find('td .product_quantity_show').hide();
+						element_list.find('td .product_quantity_edit').show();
+					}
 					element_list.find('td .product_price_show').hide();
-					element_list.find('td .product_quantity_show').hide();
 					element_list.find('td .product_price_edit').show();
-					element_list.find('td .product_quantity_edit').show();
 					element_list.find('td.cancelCheck').hide();
 					element_list.find('td.cancelQuantity').hide();
 					element_list.find('td.product_invoice').show();
@@ -849,7 +856,24 @@ $(document).ready(function() {
 			$('.partial_refund_fields').hide();
 			$('.standard_refund_fields').fadeIn();
 		}
+
+		if (order_discount_price)
+			$('.container-command-top-spacing').submit(function(e) {
+				e.preventDefault();
+				var that = $(this);
+				$.alerts.okButton= okButton;
+				$.alerts.cancelButton= cancelButton;
+				jConfirm(alertMsg, alertTitle, function(confirm){
+					if (confirm === false) {
+						that.append('<input type="hidden" name="refund_voucher_off"/>');
+						that.append('<input type="hidden" name="order_discount_price" value=' + order_discount_price + '/>');
+					}
+					that.append('<input type="hidden" name="cancelProduct" value="Refund products"/>');
+					that.unbind('submit').submit();
+				});
+			});
 	});
+
 	$('#desc-order-partial_refund').click(function() {
 		$('.cancel_product_change_link:visible').trigger('click');
 		closeAddProduct();
@@ -864,6 +888,22 @@ $(document).ready(function() {
 			$('.product_action').hide();
 			$('.partial_refund_fields').fadeIn();
 		}
+
+		if (order_discount_price)
+			$('.container-command-top-spacing').submit(function(e) {
+				e.preventDefault();
+				var that = $(this);
+				$.alerts.okButton= okButton;
+				$.alerts.cancelButton= cancelButton;
+				jConfirm(alertMsg, alertTitle, function(confirm){
+					if (confirm === false) {
+						that.append('<input type="hidden" name="refund_voucher_off"/>');
+						that.append('<input type="hidden" name="order_discount_price" value=' + order_discount_price + '/>');
+					}
+					that.append('<input type="hidden" name="partialRefund"/>');
+					that.unbind('submit').submit();
+				});
+			});
 	});
 });
 

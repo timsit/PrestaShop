@@ -30,8 +30,9 @@ class Datas
 	protected static $available_args = array(
 		'step' => array(
 			'name' => 'step',
-			'default' => 'process',
+			'default' => 'all',
 			'validate' => 'isGenericName',
+			'help' => 'all / database,fixtures,theme,modules,addons_modules',
 		),
 		'language' => array(
 			'default' => 'en',
@@ -42,6 +43,11 @@ class Datas
 		'timezone' => array(
 			'default' => 'Europe/Paris',
 			'alias' => 't',
+		),
+		'base_uri' => array(
+			'name' => 'base_uri',
+			'validate' => 'isUrl',
+			'default' => '/',
 		),
 		'http_host' => array(
 			'name' => 'domain',
@@ -75,13 +81,13 @@ class Datas
 			'name' => 'db_clear',
 			'default' => '1',
 			'validate' => 'isInt',
-			'help' => 'Drop existing tables' 
+			'help' => 'Drop existing tables'
 		),
 		'database_create' => array(
 			'name' => 'db_create',
 			'default' => '0',
 			'validate' => 'isInt',
-			'help' => 'Create the database if not exist' 
+			'help' => 'Create the database if not exist'
 		),
 		'database_prefix' => array(
 			'name' => 'prefix',
@@ -158,7 +164,7 @@ class Datas
 
 	public function __set($key, $value)
 	{
-		$this->datas[$key] = $value;		
+		$this->datas[$key] = $value;
 	}
 
 	public static function getInstance()
@@ -181,7 +187,7 @@ class Datas
 		$args_ok = array();
 		foreach ($argv as $arg)
 		{
-			if (!preg_match('/^--([^=\'"><|`]+)(?:=([^=\'"><|`]+)|(?!license))/i', trim($arg), $res))
+			if (!preg_match('/^--([^=\'"><|`]+)(?:=([^=><|`]+)|(?!license))/i', trim($arg), $res))
 				continue;
 
 			if ($res[1] == 'license' && !isset($res[2]))
@@ -207,7 +213,7 @@ class Datas
 					$this->$key = $row['default'];
 			}
 			elseif (isset($row['validate']) && !call_user_func(array('Validate', $row['validate']), $args_ok[$name]))
-					$errors[] = 'Field '.$row['name'].' is not valid';
+					$errors[] = 'Field '.$key.' is not valid';
 			else
 				$this->$key = $args_ok[$name];
 		}

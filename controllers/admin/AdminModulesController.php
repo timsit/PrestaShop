@@ -316,7 +316,7 @@ class AdminModulesControllerCore extends AdminController
 			if (is_array($values) && count($values))
 				foreach($values as $value)
 					Db::getInstance()->execute('
-						INSERT INTO `'._DB_PREFIX_.'tab_module_preference` (`id_tab_module_preference`, `id_employee`, `id_tab`, `module`) 
+						INSERT INTO `'._DB_PREFIX_.'tab_module_preference` (`id_tab_module_preference`, `id_employee`, `id_tab`, `module`)
 						VALUES (NULL, '.(int)$this->id_employee.', '.(int)$value.', \''.pSQL($module).'\');');
 		}
 		die('OK');
@@ -630,6 +630,13 @@ class AdminModulesControllerCore extends AdminController
 
 	public function postProcessDelete()
 	{
+	 	// PrestaShop demo mode
+		if (_PS_MODE_DEMO_)
+		{
+			$this->errors[] = Tools::displayError('This functionality has been disabled.');
+			return;
+		}
+
 		if ($this->tabAccess['delete'] === '1')
 		{
 			if (Tools::getValue('module_name') != '')
@@ -665,6 +672,13 @@ class AdminModulesControllerCore extends AdminController
 			if (!Tools::getValue($key))
 				continue;
 
+		 	// PrestaShop demo mode
+			if (_PS_MODE_DEMO_)
+			{
+				$this->errors[] = Tools::displayError('This functionality has been disabled.');
+				return;
+			}
+
 			if ($key == 'check')
 				$this->ajaxProcessRefreshModuleList(true);
 			elseif ($key == 'checkAndUpdate')
@@ -696,10 +710,13 @@ class AdminModulesControllerCore extends AdminController
 					$modules = (array)$modules;
 			}
 
+			$module_upgraded = array();
 			$module_errors = array();
 			if (isset($modules))
 				foreach ($modules as $name)
 				{
+
+
 					$module_to_update = array();
 					$module_to_update[$name] = null;
 					$full_report = null;
@@ -731,7 +748,6 @@ class AdminModulesControllerCore extends AdminController
 
 						}
 
-						$module_upgraded = array();
 						foreach ($module_to_update as $name => $attr)
 						{
 							if ((is_null($attr) && $this->logged_on_addons == 0) || ($attr['need_loggedOnAddons'] == 1 && $this->logged_on_addons == 0))
@@ -754,7 +770,6 @@ class AdminModulesControllerCore extends AdminController
 							else
 								$this->errors[] = sprintf(Tools::displayError("You don’t have the rights to update the %s module. Please make sure you are logged in to the PrestaShop Addons account that purchased the module."), '<strong>'.$name.'</strong>');
 						}
-						$module_upgraded = implode('|', $module_upgraded);
 					}
 
 					if (count($this->errors))
@@ -781,6 +796,7 @@ class AdminModulesControllerCore extends AdminController
 						$this->errors[] = Tools::displayError('This module needs to be installed in order to be updated:').' '.$module->name;
 					else
 					{
+
 						// If we install a module, force temporary global context for multishop
 						if (Shop::isFeatureActive() && Shop::getContext() != Shop::CONTEXT_ALL && $method != 'getContent')
 						{
@@ -801,6 +817,11 @@ class AdminModulesControllerCore extends AdminController
 							if (!method_exists($module, $method))
 								throw new PrestaShopException('Method of module cannot be found');
 
+							if ($key == 'uninstall' && !Module::getPermissionStatic($module->id, 'uninstall'))
+								$this->errors[] = Tools::displayError('You do not have permission to uninstall this module.');
+
+							if (count($this->errors))
+								continue;
 							// Get the return value of current method
 							$echo = $module->{$method}();
 
@@ -874,7 +895,6 @@ class AdminModulesControllerCore extends AdminController
 								'multishop_context' => Shop::CONTEXT_ALL | Shop::CONTEXT_GROUP | Shop::CONTEXT_SHOP
 							));
 
-
 							if (Shop::isFeatureActive() && isset(Context::getContext()->tmpOldShop))
 							{
 								Context::getContext()->shop = clone(Context::getContext()->tmpOldShop);
@@ -895,7 +915,8 @@ class AdminModulesControllerCore extends AdminController
 								{
 									if (isset($module->addons_buy_url))
 										$module->addons_buy_url = str_replace('utm_source=v1trunk_api', 'utm_source=back-office', $module->addons_buy_url)
-											.'&utm_medium=related-modules&utm_campaign=back-office-'.strtoupper($this->context->language->iso_code);
+											.'&utm_medium=related-modules&utm_campaign=back-office-'.strtoupper($this->context->language->iso_code)
+											.'&utm_content='.(defined('_PS_HOST_MODE_') ? 'ondemand' : 'download');
 									if (isset($module->description_full) && trim($module->description_full) != '')
 										$module->show_quick_view = true;
 								}
@@ -953,7 +974,7 @@ class AdminModulesControllerCore extends AdminController
 			$updated = '&updated=1';
 			if (Tools::getValue('checkAndUpdate'))
 			{
-				$updated = '';
+				$updated = '&check=1';
 				if (Tools::getValue('module_name'))
 				{
 					$module = Module::getInstanceByName(Tools::getValue('module_name'));
@@ -961,6 +982,9 @@ class AdminModulesControllerCore extends AdminController
 						unset($module);
 				}
 			}
+
+
+			$module_upgraded = implode('|', $module_upgraded);
 
 			if (isset($module_upgraded) && $module_upgraded != '')
 				Tools::redirectAdmin(self::$currentIndex.'&token='.$this->token.'&updated=1&module_name='.$module_upgraded);
@@ -1011,7 +1035,7 @@ class AdminModulesControllerCore extends AdminController
 				}
 			}
 		}
-		
+
 		return $modules_list;
 	}
 
@@ -1207,7 +1231,7 @@ class AdminModulesControllerCore extends AdminController
 				|| (!is_array($module->limited_countries) && strtolower($this->iso_default_country) != strval($module->limited_countries)))))
 			return true;
 
-		// Module has not been filtered		
+		// Module has not been filtered
 		return false;
 	}
 
@@ -1225,8 +1249,8 @@ class AdminModulesControllerCore extends AdminController
 		$helper->title = $this->l('Installed Modules', null, null, false);
 		if (ConfigurationKPI::get('INSTALLED_MODULES') !== false && ConfigurationKPI::get('INSTALLED_MODULES') != '')
 			$helper->value = ConfigurationKPI::get('INSTALLED_MODULES');
-		if (ConfigurationKPI::get('INSTALLED_MODULES_EXPIRE') < $time)
-			$helper->source = $this->context->link->getAdminLink('AdminStats').'&ajax=1&action=getKpi&kpi=installed_modules';
+		$helper->source = $this->context->link->getAdminLink('AdminStats').'&ajax=1&action=getKpi&kpi=installed_modules';
+		$helper->refresh = (bool)(ConfigurationKPI::get('INSTALLED_MODULES_EXPIRE') < $time);
 		$kpis[] = $helper->generate();
 
 		$helper = new HelperKpi();
@@ -1236,8 +1260,8 @@ class AdminModulesControllerCore extends AdminController
 		$helper->title = $this->l('Disabled Modules', null, null, false);
 		if (ConfigurationKPI::get('DISABLED_MODULES') !== false && ConfigurationKPI::get('DISABLED_MODULES') != '')
 			$helper->value = ConfigurationKPI::get('DISABLED_MODULES');
-		if (ConfigurationKPI::get('DISABLED_MODULES_EXPIRE') < $time)
-			$helper->source = $this->context->link->getAdminLink('AdminStats').'&ajax=1&action=getKpi&kpi=disabled_modules';
+		$helper->source = $this->context->link->getAdminLink('AdminStats').'&ajax=1&action=getKpi&kpi=disabled_modules';
+		$helper->refresh = (bool)(ConfigurationKPI::get('DISABLED_MODULES_EXPIRE') < $time);
 		$kpis[] = $helper->generate();
 
 		$helper = new HelperKpi();
@@ -1247,8 +1271,8 @@ class AdminModulesControllerCore extends AdminController
 		$helper->title = $this->l('Modules to update', null, null, false);
 		if (ConfigurationKPI::get('UPDATE_MODULES') !== false && ConfigurationKPI::get('UPDATE_MODULES') != '')
 			$helper->value = ConfigurationKPI::get('UPDATE_MODULES');
-		if (ConfigurationKPI::get('UPDATE_MODULES_EXPIRE') < $time)
-			$helper->source = $this->context->link->getAdminLink('AdminStats').'&ajax=1&action=getKpi&kpi=update_modules';
+		$helper->source = $this->context->link->getAdminLink('AdminStats').'&ajax=1&action=getKpi&kpi=update_modules';
+		$helper->refresh = (bool)(ConfigurationKPI::get('UPDATE_MODULES_EXPIRE') < $time);
 		$kpis[] = $helper->generate();
 
 		$helper = new HelperKpiRow();
@@ -1278,7 +1302,7 @@ class AdminModulesControllerCore extends AdminController
 		$this->modals[] = array(
 			'modal_id' => "moduleNotTrusted",
 			'modal_class' => "modal-lg",
-			'modal_title' => $this->l('This module is Untrusted'),
+			'modal_title' => (defined('_PS_HOST_MODE_') && _PS_HOST_MODE_) ? $this->l('This module cannot be installed') : $this->l('Important Notice'),
 			'modal_content' => $modal_content
 		);
 
@@ -1346,6 +1370,25 @@ class AdminModulesControllerCore extends AdminController
 		$upgrade_available = array();
 		$dont_filter = false;
 
+		//Add succes message for one module update
+		if (Tools::getValue('updated') && Tools::getValue('module_name'))
+		{
+			$module_names = (string)Tools::getValue('module_name');
+			if (strpos($module_names, '|'))
+			{
+				$module_names = explode('|', $module_names);
+				$dont_filter = true;
+			}
+
+			if (!is_array($module_names))
+				$module_names = (array)$module_names;
+
+			foreach ($modules as $km => $module)
+				if (in_array($module->name, $module_names))
+					$module_success[] = array('name' => $module->displayName, 'message' => array(
+						0 => sprintf($this->l('Current version: %s'), $module->version)));
+		}
+
 		// Browse modules list
 		foreach ($modules as $km => $module)
 		{
@@ -1395,23 +1438,7 @@ class AdminModulesControllerCore extends AdminController
 						continue;
 				unset($object);
 			}
-			//Add succes message for one module update
-			elseif (Tools::getValue('updated') && Tools::getValue('module_name'))
-			{
-				$module_names = (string)Tools::getValue('module_name');
-				if (strpos($module_names, '|'))
-				{
-					$module_names = explode('|', $module_names);
-					$dont_filter = true;
-				}
 
-				if (!is_array($module_names))
-					$module_names = (array)$module_names;
-
-				if (in_array($module->name, $module_names))
-					$module_success[] = array('name' => $module->displayName, 'message' => array(
-						0 => sprintf($this->l('Current version: %s'), $module->version)));
-			}
 
 			// Make modules stats
 			$this->makeModulesStats($module);
@@ -1449,7 +1476,7 @@ class AdminModulesControllerCore extends AdminController
 			unset($object);
 			if ($module->installed && isset($module->version_addons) && $module->version_addons)
 				$upgrade_available[] = array('anchor' => ucfirst($module->name), 'name' => $module->name, 'displayName' => $module->displayName);
-				
+
 			if (in_array($module->name, $this->list_partners_modules))
 				$module->type = 'addonsPartner';
 
@@ -1512,7 +1539,7 @@ class AdminModulesControllerCore extends AdminController
 			'page_header_toolbar_btn' => $this->page_header_toolbar_btn,
 			'modules_uri' => __PS_BASE_URI__.basename(_PS_MODULE_DIR_),
 			'dont_filter' => $dont_filter,
-		);		
+		);
 
 		if ($this->logged_on_addons)
 		{

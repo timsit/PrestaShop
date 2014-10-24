@@ -5,7 +5,8 @@
 @import "compass/reset";
 @import "theme_variables";
 @import "bootstrap";
-@import "font-awesome";
+@import "font-awesome/font-awesome";
+@import "icons";
 
 a:hover {
 	text-decoration: none;
@@ -136,6 +137,9 @@ p.info-account {
 
 .alert {
 	font-weight: bold;
+	&:before {
+		cursor:  pointer;
+	}
 	ul, ol {
 		padding-left: 15px;
 		margin-left: 27px;
@@ -1796,6 +1800,9 @@ div.star a:hover {
 		.row {
 			position: relative;
 		}
+		ul.row{
+			position: static;
+		}
 		.footer-block {
 			margin-top: 45px;
 			// max 767px
@@ -1969,6 +1976,20 @@ div.star a:hover {
 							}
 						}
 					}
+					&.vimeo {
+						a {
+							&:before {
+								content: "\f194";
+							}
+						}
+					}
+					&.instagram {
+						a {
+							&:before {
+								content: "\f16d";
+							}
+						}
+					}
 				}
 			}
 			h4 {
@@ -2103,7 +2124,7 @@ div.star a:hover {
 		vertical-align: middle;
 		&.cart_quantity {
 			padding: 41px 14px 25px;
-			width: 88px;
+			width: 70px;
 			.cart_quantity_button {
 				margin-top: 3px;
 				a {
@@ -2135,9 +2156,17 @@ a.price_discount_delete {
 }
 
 #cart_summary {
+	thead {
+		th {
+			padding: 7px 8px 9px 8px;
+			&.cart_product {
+				@extend .text-center;
+			}
+		}
+	}
 	tbody {
 		td {
-			padding: 7px 8px 9px 18px;
+			padding: 7px 8px 9px 8px;
 			&.cart_product {
 				@extend .text-center;
 				padding: 7px;
@@ -2169,6 +2198,14 @@ a.price_discount_delete {
 			}
 			&.cart_avail{
 				@extend .text-center;
+				width: 1%;
+				span {
+					white-space: nowrap;
+				}
+			}
+			&.cart_delete{
+				@extend .text-center;
+				width: 1%;
 			}
 			&.cart_total {
 				@extend .text-right;
@@ -2231,34 +2268,59 @@ a.price_discount_delete {
 			}
 			tr {
 				border-bottom: 1px solid #cccccc;
+				padding-bottom: 7px;
 				overflow: hidden;
+				position: relative;
 			}
 			td {
 				border: none;
 				position: relative;
-				width: 50%;
 				float: left;
 				white-space: normal;
-				&.cart_product {}
+				padding: 7px 20px 7px 20px;
+				&.cart_product {
+					text-align: left;
+				}
 				&.cart_description {}
 				&.cart_avail {
-					clear: both;
+					display: none;
 				}
-				&.cart_unit {}
-				&.cart_quantity {
-					clear: both;
-					padding: 9px 8px 11px 18px;
-				}
-				&.cart_total {}
-				&.cart_delete {
-					width: 100%;
-					clear: both;
+				&.cart_unit {
+					width: 33%;
 					text-align: right;
+					min-height: 70px;
+					clear: both;
+					.price {
+						text-align: right;
+					}
+				}
+				&.cart_quantity {
+					div {
+						display: block;
+					}
+					&>.form-control {
+						display: inline;
+					}
+					&>.cart_quantity_button a {
+						margin-right: 0px;
+						float: none;
+					}
+					width: 33%;
+					min-height: 70px;
+					border-left: 1px solid #cccccc;
+					border-right: 1px solid #cccccc;
+				}
+				&.cart_total {
+					width: 33%;
+					min-height: 70px;
+					text-align: right;
+				}
+				&.cart_delete {
+					position: absolute;
+					right: 20px;
+					top: 7px;
 					&:before {
-						display: inline-block;
-						padding-right: 0.5em;
-						position: relative;
-						top: -3px;
+						content: '' !important;
 					}
 				}
 				div {
@@ -2267,6 +2329,7 @@ a.price_discount_delete {
 			}
 			td:before {
 				content: attr(data-title);
+				font-weight: bold;
 				display: block;
 			}
 			tfoot {

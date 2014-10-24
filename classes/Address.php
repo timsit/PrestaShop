@@ -174,7 +174,7 @@ class AddressCore extends ObjectModel
 			Customer::resetAddressCache($this->id_customer);
 		return true;
 	}
-	
+
 	public function update($null_values = false)
 	{
 		// Empty related caches
@@ -351,7 +351,7 @@ class AddressCore extends ObjectModel
 	* @param int $id_address
 	* @return Address address
 	*/
-	public static function initialize($id_address = null)
+	public static function initialize($id_address = null, $with_geoloc = false)
 	{
 		// if an id_address has been specified retrieve the address
 		if ($id_address)
@@ -359,7 +359,14 @@ class AddressCore extends ObjectModel
 			$address = new Address((int)$id_address);
 
 			if (!Validate::isLoadedObject($address))
-				throw new PrestaShopException('Invalid address');
+				throw new PrestaShopException('Invalid address #'.(int)$id_address);
+		}
+		elseif ($with_geoloc && isset($context->customer->geoloc_id_country))
+		{
+			$address = new Address();
+			$address->id_country = (int)$context->customer->geoloc_id_country;
+			$address->id_state = (int)$context->customer->id_state;
+			$address->zipcode = $context->customer->postcode;
 		}
 		else
 		{
@@ -391,7 +398,7 @@ class AddressCore extends ObjectModel
 		$query->where('id_warehouse = 0');
 		return Db::getInstance(_PS_USE_SQL_SLAVE_)->getValue($query);
 	}
-	
+
 	public static function aliasExist($alias, $id_address, $id_customer)
 	{
 		$query = new DbQuery();
@@ -403,5 +410,13 @@ class AddressCore extends ObjectModel
 		$query->where('deleted = 0');
 
 		return Db::getInstance(_PS_USE_SQL_SLAVE_)->getValue($query);
+	}
+
+	public function getFieldsRequiredDB()
+	{
+		$this->cacheFieldsRequiredDatabase(false);
+		if (isset(self::$fieldsRequiredDatabase['Address']))
+			return self::$fieldsRequiredDatabase['Address'];
+		return array();
 	}
 }

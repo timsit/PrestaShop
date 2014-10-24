@@ -77,8 +77,9 @@
 					<div class="row">
 						<div class="col-lg-12">
 							<p class="help-block">
-								<strong>{l s='Check / Uncheck all'}</strong>
-								{l s='(If you are editing this page for several shops, some fields may be disabled. If you need to edit them, you will need to check the box for each field)'}
+								<strong>{l s='Check / Uncheck all'}</strong><br />
+								{l s='You are editing this page for a specific shop or group. Click "Yes" to check all fields, "No" to uncheck all.'}<br />
+ 								{l s='If you check a field, change its value, and save, the multistore behavior will not apply to this shop (or group), for this particular parameter.'}
 							</p>
 						</div>
 					</div>
@@ -182,7 +183,7 @@
 											{/foreach}
 										</div>
 									{elseif $field['type'] == 'text'}
-										<div class="col-lg-9">{if isset($field['suffix'])}<div class="input-group">{/if}
+										<div class="col-lg-9">{if isset($field['suffix'])}<div class="input-group{if isset($field.class)} {$field.class}{/if}">{/if}
 											<input class="form-control {if isset($field['class'])}{$field['class']}{/if}" type="{$field['type']}"{if isset($field['id'])} id="{$field['id']}"{/if} size="{if isset($field['size'])}{$field['size']|intval}{else}5{/if}" name="{$key}" value="{$field['value']|escape:'html':'UTF-8'}" {if isset($field['autocomplete']) && !$field['autocomplete']}autocomplete="off"{/if}/>
 											{if isset($field['suffix'])}
 											<span class="input-group-addon">
@@ -192,7 +193,7 @@
 											{if isset($field['suffix'])}</div>{/if}
 										</div>
 									{elseif $field['type'] == 'password'}
-										<div class="col-lg-9">{if isset($field['suffix'])}<div class="input-group">{/if}
+										<div class="col-lg-9">{if isset($field['suffix'])}<div class="input-group{if isset($field.class)} {$field.class}{/if}">{/if}
 											<input type="{$field['type']}"{if isset($field['id'])} id="{$field['id']}"{/if} size="{if isset($field['size'])}{$field['size']|intval}{else}5{/if}" name="{$key}" value=""{if isset($field['autocomplete']) && !$field['autocomplete']} autocomplete="off"{/if} />
 											{if isset($field['suffix'])}
 											<span class="input-group-addon">

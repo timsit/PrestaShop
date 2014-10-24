@@ -112,7 +112,7 @@ class AdminThemesControllerCore extends AdminController
 		header('Expires: Mon, 26 Jul 1997 05:00:00 GMT');
 
 		parent::init();
-		$this->can_display_themes = (!Shop::isFeatureActive() || Shop::getContext() == Shop::CONTEXT_SHOP) ? true : false;
+		$this->can_display_themes = (!Shop::isFeatureActive() || Shop::getContext() == Shop::CONTEXT_SHOP);
 
 		libxml_use_internal_errors(true);
 
@@ -160,7 +160,7 @@ class AdminThemesControllerCore extends AdminController
 		$cur_theme = array();
 		foreach ($all_themes as $theme)
 		{
-			if (file_exists(_PS_ALL_THEMES_DIR_.$theme->directory.'/preview.jpg'))
+			if (is_dir(_PS_ALL_THEMES_DIR_.$theme->directory))
 			{
 				$themes[] = array('id' => $theme->id, 'name' => $theme->name, 'preview' => '../themes/'.$theme->directory.'/preview.jpg');
 				if ($theme->id == $this->context->shop->id_theme)
@@ -320,7 +320,10 @@ class AdminThemesControllerCore extends AdminController
 					'storeLink' => array(
 						'title' => $this->l('Visit the theme catalog'),
 						'icon' => 'process-icon-themes',
-						'href' => 'http://addons.prestashop.com/en/3-templates-prestashop?utm_source=back-office&utm_medium=theme-button&utm_campaign=back-office-'.$iso_lang_uc,
+						'href' => 'http://addons.prestashop.com/en/3-templates-prestashop'
+						.'?utm_source=back-office&utm_medium=theme-button'
+						.'&utm_campaign=back-office-'.$iso_lang_uc
+						.'&utm_content='.(defined('_PS_HOST_MODE_') ? 'ondemand' : 'download'),
 						'js' => 'return !window.open(this.href)'
 					)
 				)
@@ -353,28 +356,17 @@ class AdminThemesControllerCore extends AdminController
 		$metas = Meta::getMetas();
 		$formated_metas = array();
 
-		foreach ($metas as $meta)
-		{
-			$meta_object = New Meta($meta['id_meta']);
-
-			$title = $meta['page'];
-			if (isset($meta_object->title[(int)$this->context->language->id]) && $meta_object->title[(int)$this->context->language->id] != '')
-				$title = $meta_object->title[(int)$this->context->language->id];
-
-			$formated_metas[$meta['id_meta']] = array(
-				'title' => $title,
-				'left' => 0,
-				'right' => 0,
-			);
-		}
-
 		$image_url = false;
 		if ($this->object)
 		{
 			if ((int)$this->object->id > 0)
 			{
 				$theme = New Theme((int)$this->object->id);
-				$theme_metas = $theme->getMetas();
+				$theme_metas = Db::getInstance()->executeS('SELECT ml.`title`, tm.`left_column` as `left`, tm.`right_column` as `right`, m.`id_meta`, tm.`id_theme_meta`
+					FROM '._DB_PREFIX_.'theme_meta as tm
+					LEFT JOIN '._DB_PREFIX_.'meta m ON (m.`id_meta` = tm.`id_meta`)
+					LEFT JOIN '._DB_PREFIX_.'meta_lang ml ON(ml.id_meta = m.id_meta AND ml.id_lang = '.(int)$this->context->language->id.')
+					WHERE tm.`id_theme` = '.(int)$this->object->id);
 
 				// if no theme_meta are found, we must create them
 				if (empty($theme_metas))
@@ -389,17 +381,18 @@ class AdminThemesControllerCore extends AdminController
 						$metas_default[] = $tmp_meta;
 					}
 					$theme->updateMetas($metas_default);
-					$theme_metas = $theme->getMetas();
+					$theme_metas = Db::getInstance()->executeS('SELECT ml.`title`, tm.`left_column` as `left`, tm.`right_column` as `right`, m.`id_meta`, tm.`id_theme_meta`
+						FROM '._DB_PREFIX_.'theme_meta as tm
+						LEFT JOIN '._DB_PREFIX_.'meta m ON (m.`id_meta` = tm.`id_meta`)
+						LEFT JOIN '._DB_PREFIX_.'meta_lang ml ON(ml.id_meta = m.id_meta AND ml.id_lang = '.(int)$this->context->language->id.')
+						WHERE tm.`id_theme` = '.(int)$this->object->id);
 				}
-
 				$image_url = '<img alt="preview" src="'.__PS_BASE_URI__.'themes/'.$theme->directory.'/preview.jpg">';
-				foreach ($theme_metas as $theme_meta)
-				{
-					$formated_metas[$theme_meta['id_meta']]['id_theme_meta'] = (int)$theme_meta['id_theme_meta'];
-					$formated_metas[$theme_meta['id_meta']]['id_meta'] = (int)$theme_meta['id_meta'];
-					$formated_metas[$theme_meta['id_meta']]['left'] = (int)$theme_meta['left_column'];
-					$formated_metas[$theme_meta['id_meta']]['right'] = (int)$theme_meta['right_column'];
-				}
+
+				foreach ($theme_metas as $key => $meta)
+					if (!isset($meta['title']) || !$meta['title'] || $meta['title'] == '')
+						unset($theme_metas[$key]);
+				$formated_metas = $theme_metas;
 			}
 			$selected_theme_dir = $this->object->directory;
 		}
@@ -939,13 +932,13 @@ class AdminThemesControllerCore extends AdminController
 				$this->errors[] = $this->l('Can\'t create config file.');
 
 			if (isset($_FILES['documentation']))
-				if (!empty($_FILES['documentation']['tmp_name']) && 
-					!empty($_FILES['documentation']['name']) && 
+				if (!empty($_FILES['documentation']['tmp_name']) &&
+					!empty($_FILES['documentation']['name']) &&
 					!$zip->addFile($_FILES['documentation']['tmp_name'], 'doc/'.$_FILES['documentation']['name']))
 					$this->errors[] = $this->l('Can\'t copy documentation.');
 
 			$given_path = realpath(_PS_ALL_THEMES_DIR_.Tools::getValue('theme_directory'));
-			
+
 			if ($given_path !== false)
 			{
 				$ps_all_theme_dir_lenght = strlen(realpath(_PS_ALL_THEMES_DIR_));
@@ -954,7 +947,7 @@ class AdminThemesControllerCore extends AdminController
 					$this->errors[] = $this->l('Wrong theme directory path');
 				else
 				{
-					$this->archiveThisFile($zip, Tools::getValue('theme_directory'), _PS_ALL_THEMES_DIR_, 'themes/');			
+					$this->archiveThisFile($zip, Tools::getValue('theme_directory'), _PS_ALL_THEMES_DIR_, 'themes/');
 					foreach ($this->to_export as $row)
 					{
 						if (!in_array($row, $this->native_modules))
@@ -2469,7 +2462,8 @@ class AdminThemesControllerCore extends AdminController
 
 	public function processThemeInstall()
 	{
-		if (Shop::isFeatureActive() && !Tools::getIsset('checkBoxShopAsso_theme'))
+		$shops_asso = $this->context->employee->getAssociatedShops();
+		if (Shop::isFeatureActive() && !Tools::getIsset('checkBoxShopAsso_theme') && count($shops_asso) > 1)
 		{
 			$this->errors[] = $this->l('You must choose at least one shop.');
 			$this->display = 'ChooseThemeModule';
@@ -2479,9 +2473,14 @@ class AdminThemesControllerCore extends AdminController
 
 		$theme = New Theme((int)Tools::getValue('id_theme'));
 
-		$shops = array(Configuration::get('PS_SHOP_DEFAULT'));
-		if (Tools::isSubmit('checkBoxShopAsso_theme'))
-			$shops = Tools::getValue('checkBoxShopAsso_theme');
+		if (count($shops_asso) == 1)
+			$shops = $shops_asso;
+		else
+		{
+			$shops = array(Configuration::get('PS_SHOP_DEFAULT'));
+			if (Tools::isSubmit('checkBoxShopAsso_theme'))
+				$shops = Tools::getValue('checkBoxShopAsso_theme');
+		}
 
 		$xml = false;
 		if (file_exists(_PS_ROOT_DIR_.'/config/xml/themes/'.$theme->directory.'.xml'))
@@ -2498,7 +2497,6 @@ class AdminThemesControllerCore extends AdminController
 
 				$exceptions = (isset($row['exceptions']) ? explode(',', strval($row['exceptions'])) : array());
 
-				if (Hook::getIdByName(strval($row['hook'])))
 					$module_hook[$name]['hook'][] = array(
 						'hook' => strval($row['hook']),
 						'position' => strval($row['position']),
@@ -2718,11 +2716,39 @@ class AdminThemesControllerCore extends AdminController
 				if (!@ImageManager::resize($tmp_name, _PS_IMG_DIR_.$logo_name))
 					$this->errors[] = Tools::displayError('An error occurred while attempting to copy your logo.');
 			}
-
+			$id_shop = null;
+			$id_shop_group = null;
 			if (!count($this->errors) && @filemtime(_PS_IMG_DIR_.Configuration::get($field_name)))
-				@unlink(_PS_IMG_DIR_.Configuration::get($field_name));
-
-			Configuration::updateValue($field_name, $logo_name);
+			{
+				if(Shop::isFeatureActive())
+				{
+					if (Shop::getContext() == Shop::CONTEXT_SHOP)
+					{
+						$id_shop = Shop::getContextShopID();
+						$id_shop_group = Shop::getContextShopGroupID();
+						Shop::setContext(Shop::CONTEXT_ALL);
+						$logo_all = Configuration::get($field_name);
+						Shop::setContext(Shop::CONTEXT_GROUP);
+						$logo_group = Configuration::get($field_name);
+						Shop::setContext(Shop::CONTEXT_SHOP);
+						$logo_shop = Configuration::get($field_name);
+						if ($logo_all != $logo_shop && $logo_group != $logo_shop && $logo_shop != false)
+							@unlink(_PS_IMG_DIR_.Configuration::get($field_name));
+					}
+					elseif (Shop::getContext() == Shop::CONTEXT_GROUP)
+					{
+						$id_shop_group = Shop::getContextShopGroupID();
+						Shop::setContext(Shop::CONTEXT_ALL);
+						$logo_all = Configuration::get($field_name);
+						Shop::setContext(Shop::CONTEXT_GROUP);
+						if ($logo_all != Configuration::get($field_name))
+							@unlink(_PS_IMG_DIR_.Configuration::get($field_name));
+					}
+				}
+				else
+					@unlink(_PS_IMG_DIR_.Configuration::get($field_name));
+			}
+			Configuration::updateValue($field_name, $logo_name, false, $id_shop_group, $id_shop);
 			@unlink($tmp_name);
 		}
 	}
@@ -2772,7 +2798,7 @@ class AdminThemesControllerCore extends AdminController
 				$this->errors[] = sprintf(Tools::displayError('An error occurred while uploading the favicon: cannot copy file "%s" to folder "%s".'), $_FILES[$name]['tmp_name'], $dest);
 		}
 
-		return !count($this->errors) ? true : false;
+		return !count($this->errors);
 	}
 
 	public function initProcess()

@@ -133,7 +133,15 @@ class StoresControllerCore extends FrontController
 		$days[7] = 'Sunday';
 		
 		$days_datas = array();
-		$hours = array_filter(unserialize($store['hours']));
+		$hours = array();
+		
+		if ($store['hours'])
+		{
+			$hours = unserialize($store['hours']);
+			if (is_array($hours))
+				$hours = array_filter($hours);
+		}
+		
 		if (!empty($hours))
 		{
 			for ($i = 1; $i < 8; $i++)
@@ -288,7 +296,7 @@ class StoresControllerCore extends FrontController
 
 		if (!Configuration::get('PS_STORES_SIMPLIFIED'))
 		{
-			$default_country = new Country((int)Configuration::get('PS_COUNTRY_DEFAULT'));
+			$default_country = new Country((int)Tools::getCountry());
 			$this->addJS('http'.((Configuration::get('PS_SSL_ENABLED') && Configuration::get('PS_SSL_ENABLED_EVERYWHERE')) ? 's' : '').'://maps.google.com/maps/api/js?sensor=true&amp;region='.substr($default_country->iso_code, 0, 2));
 			$this->addJS(_THEME_JS_DIR_.'stores.js');
 		}

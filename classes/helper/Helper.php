@@ -183,7 +183,6 @@ class HelperCore
 			'search' => $this->l('Find a category')
 		);
 
-		$top_category = Category::getTopCategory();
 		if (Tools::isSubmit('id_shop'))
 			$id_shop = Tools::getValue('id_shop');
 		else
@@ -196,7 +195,7 @@ class HelperCore
 					$id_shop = 0;
 		$shop = new Shop($id_shop);
 		$root_category = Category::getRootCategory(null, $shop);
-		$disabled_categories[] = $top_category->id;
+		$disabled_categories[] = (int)Configuration::get('PS_ROOT_CATEGORY');
 		if (!$root)
 			$root = array('name' => $root_category->name, 'id_category' => $root_category->id);
 
@@ -240,28 +239,29 @@ class HelperCore
 		.'</div>';
 
 		$home_is_selected = false;
-		foreach ($selected_cat as $cat)
-		{
-			if (is_array($cat))
+		if (is_array($selected_cat))
+			foreach ($selected_cat as $cat)
 			{
-				$disabled = in_array($cat['id_category'], $disabled_categories);
-				if ($cat['id_category'] != $root['id_category'])
-					$html .= '<input '.($disabled?'disabled="disabled"':'').' type="hidden" name="'.$input_name.'" value="'.$cat['id_category'].'" >';
+				if (is_array($cat))
+				{
+					$disabled = in_array($cat['id_category'], $disabled_categories);
+					if ($cat['id_category'] != $root['id_category'])
+						$html .= '<input '.($disabled?'disabled="disabled"':'').' type="hidden" name="'.$input_name.'" value="'.$cat['id_category'].'" >';
+					else
+						$home_is_selected = true;
+				}
 				else
-					$home_is_selected = true;
+				{
+					$disabled = in_array($cat, $disabled_categories);
+					if ($cat != $root['id_category'])
+						$html .= '<input '.($disabled?'disabled="disabled"':'').' type="hidden" name="'.$input_name.'" value="'.$cat.'" >';
+					else
+						$home_is_selected = true;
+				}
 			}
-			else
-			{
-				$disabled = in_array($cat, $disabled_categories);
-				if ($cat != $root['id_category'])
-					$html .= '<input '.($disabled?'disabled="disabled"':'').' type="hidden" name="'.$input_name.'" value="'.$cat.'" >';
-				else
-					$home_is_selected = true;
-			}
-		}
 
 		$root_input = '';
-		if ($root['id_category'] != $top_category->id || (Tools::isSubmit('ajax') && Tools::getValue('action') == 'getCategoriesFromRootCategory'))
+		if ($root['id_category'] != (int)Configuration::get('PS_ROOT_CATEGORY') || (Tools::isSubmit('ajax') && Tools::getValue('action') == 'getCategoriesFromRootCategory'))
 			$root_input = '
 				<p class="checkbox"><i class="icon-folder-open"></i><label>
 					<input type="'.(!$use_radio ? 'checkbox' : 'radio').'" name="'
@@ -343,7 +343,7 @@ class HelperCore
 
 		return $tpl->fetch();
 	}
-	
+
 	public function renderModulesList($modules_list)
 	{
 		$this->tpl_vars = array(
